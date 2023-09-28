@@ -103,6 +103,15 @@ function crearHTML(){
                // Insertarlo en el HTML
                listaTweets.appendChild(li)
           })
+     } else {
+          // Crear el HTML
+          const vacio = document.createElement('p')
+          vacio.classList.add('vacio')
+          vacio.textContent = 'No hay Tweets Disponibles'
+
+          // Insertarlo en el DOM
+          listaTweets.appendChild(vacio)
+          
      }
 
      sincronizarStorage()

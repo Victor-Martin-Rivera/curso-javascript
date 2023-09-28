@@ -24,3 +24,13 @@ h1, h2 {
     color: white;
 }
 
+.vacio {
+    background-color: yellow;
+    text-align: center;
+    padding: 10px;
+    text-transform: uppercase;
+    font-weight: bold;
+    max-width: 400px;
+    margin: 0 auto;
+    color: black;
+}
