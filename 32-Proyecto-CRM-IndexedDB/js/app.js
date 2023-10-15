@@ -1,101 +1,112 @@
-// Las variables y funciones se quedan de forma local
-(function(){
+(function() {
+    let DB;
 
-    // Variable Global
-    let DB
-
-    const listadoClientes = document.querySelector('#listado-clientes')
-
+    const listadoClientes = document.querySelector('#listado-clientes');
 
     document.addEventListener('DOMContentLoaded', () => {
-        crearDB()
-
-        if(window.indexedDB.open('crm',1)){
-            obtenerClientes()
+        crearDB();
+    
+        if(window.indexedDB.open('crm', 1)) {
+            obtenerClientes();
         }
 
-        listadoClientes.addEventListener('click', eliminarRegistro)
-    })
+        listadoClientes.addEventListener('click', eliminarRegistro) 
+    });
 
     function eliminarRegistro(e){
         if(e.target.classList.contains('eliminar')){
             const idEliminar = Number(e.target.dataset.cliente)
             
             const confirmar = confirm('¿Deseas eliminar este cliente?')
-
+            
             if(confirmar){
                 const transaction = DB.transaction(['crm'], 'readwrite')
                 const objectStore = transaction.objectStore('crm')
 
                 objectStore.delete(idEliminar)
 
-                transaction.oncomplete = function()
-                {
+                transaction.oncomplete = function(){
                     e.target.parentElement.parentElement.remove()
                 }
 
-                transaction.onerror = function()
-                {
+                transaction.onerror = function(){
                     console.log('Hubo un error')
                 }
             }
         }
     }
-
-    // Función que crea la base de datos de IndexDB
-    function crearDB(){
-        const crearDB = window.indexedDB.open('crm', 1)
-
-        crearDB.onerror = function(){
-            console.log('Hubo un error')
-        }
-
-        crearDB.onsuccess = function(){
-            DB = crearDB.result // //Si la base de datos se crea correctamente, se asigna a esa variable DB. 
-        }
-
-        // Toma un evento
-        crearDB.onupgradeneeded = function(e){
-            const db = e.target.result
-
-            const objectStore = db.createObjectStore('crm', {keyPath: 'id', autoIncrement: true})
-
-            objectStore.createIndex('nombre', 'nombre', {unique: false})
-            objectStore.createIndex('email', 'email', {unique: true})
-            objectStore.createIndex('telefono', 'telefono', {unique: false})
-            objectStore.createIndex('empresa', 'empresa', {unique: false})
-            objectStore.createIndex('id', 'id', {unique: true})
-
-            console.log('DB creada')
-        }
+    
+    // Código de IndexedDB
+    function crearDB() {
+        // crear base de datos con la versión 1
+        const crearDB = window.indexedDB.open('crm', 1);
+    
+        // si hay un error, lanzarlo
+        crearDB.onerror = function() {
+            console.log('Hubo un error');
+        };
+    
+        // si todo esta bien, asignar a database el resultado
+        crearDB.onsuccess = function() {
+            // guardamos el resultado
+            DB = crearDB.result;
+        };
+    
+        // este método solo corre una vez
+        crearDB.onupgradeneeded = function(e) {
+            // el evento que se va a correr tomamos la base de datos
+            const db = e.target.result;
+    
+            
+            // definir el objectstore, primer parametro el nombre de la BD, segundo las opciones
+            // keypath es de donde se van a obtener los indices
+            const objectStore = db.createObjectStore('crm', { keyPath: 'id',  autoIncrement: true } );
+    
+            //createindex, nombre y keypath, 3ro los parametros
+            objectStore.createIndex('nombre', 'nombre', { unique: false } );
+            objectStore.createIndex('email', 'email', { unique: true } );
+            objectStore.createIndex('telefono', 'telefono', { unique: false } );
+            objectStore.createIndex('empresa', 'empresa', { unique: false } );
+            objectStore.createIndex('id', 'id', { unique: true } );
+    
+            
+            console.log('Database creada y lista');
+        };
+    
     }
 
-    // Función que obtiene los clientes de la base de datos
-    function obtenerClientes()
-    {
-        const abrirConexion = window.indexedDB.open('crm', 1)
 
-        abrirConexion.onerror = function(){
-            console.log('Hubo un error')
-        }
+    function obtenerClientes() {
 
+        let abrirConexion = window.indexedDB.open('crm', 1);
+
+        // si hay un error, lanzarlo
+        abrirConexion.onerror = function() {
+            console.log('Hubo un error');
+        };
+    
+        // si todo esta bien, asignar a database el resultado
         abrirConexion.onsuccess = function() {
-            DB = abrirConexion.result
+            // guardamos el resultado
+            DB = abrirConexion.result;
 
-            let clienteCount = 0
-        
-            const objectStore = DB.transaction('crm').objectStore('crm')
+            const objectStore = DB.transaction('crm').objectStore('crm');
 
-            objectStore.openCursor().onsuccess = function(e){
-                const cursor = e.target.result
+            let totalUsuarios = 0; // Variable para contar la cantidad de usuarios
 
-                // El cursor es el iterador
-                if(cursor){
-                    clienteCount++
-                    const { nombre, empresa, email, telefono, id} = cursor.value
+            // retorna un objeto request o petición, 
+            objectStore.openCursor().onsuccess = function(e) {
+                 // cursor se va a ubicar en el registro indicado para accede ra los datos
+                 const cursor = e.target.result;
 
-                        listadoClientes.innerHTML += 
-                        `<tr>
+                //  console.log(e.target);
+     
+                 if(cursor) {
+                    const { nombre, empresa, email, telefono, id } = cursor.value;
+                    
+                    listadoClientes.innerHTML += `
+
+                        <tr>
                             <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
                                 <p class="text-sm leading-5 font-medium text-gray-700 text-lg  font-bold"> ${nombre} </p>
                                 <p class="text-sm leading-10 text-gray-700"> ${email} </p>
@@ -110,27 +121,28 @@
                                 <a href="editar-cliente.html?id=${id}" class="text-teal-600 hover:text-teal-900 mr-5">Editar</a>
                                 <a href="#" data-cliente="${id}" class="text-red-600 hover:text-red-900 eliminar">Eliminar</a>
                             </td>
-                        </tr>`
-            
-
-                    cursor.continue()
-                } else{
-                    if(clienteCount === 0){
-                        const clientes = document.createElement('p')
-                        // Agrega el mensaje al DOM
-                        // const mensaje = document.createElement('p');
-                        clientes.textContent = 'No hay clientes...';
-                        clientes.classList.add('text-center');
-                        listadoClientes.appendChild(clientes);
+                        </tr>
+                    `;
+                    
+                    totalUsuarios++
+                    cursor.continue();
+                 } else 
+                 {
+                    const totalUsuariosParagraph = document.getElementById('total-usuarios');
+                    if(totalUsuarios === 0){
+                        totalUsuariosParagraph.textContent = 'No hay clientes disponibles.';
                     } else {
-                        // const mensaje = document.createElement('p');
-                        clientes.textContent = `Hay ${clienteCount} clientes registrados.`;
-                        clientes.classList.add('text-center');
-                        listadoClientes.appendChild(clientes);
+                        totalUsuariosParagraph.textContent = `Total de clientes registrados: ${totalUsuarios}`;
                     }
                 }
-            }
-        }
+             };
+
+
+
+        };
+
 
     }
-})()
+    
+
+})();
