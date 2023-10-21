@@ -9,8 +9,6 @@ window.addEventListener('load', () => {
 
 function buscarClima(e){
   e.preventDefault();
-
-  // console.log('Buscando el Clima')
   
   // Validar
   const ciudad = document.querySelector('#ciudad').value
@@ -60,12 +58,90 @@ function consultarAPI(ciudad, pais){
 
   const url = `https://api.openweathermap.org/data/2.5/weather?q=${ciudad},${pais}&appid=${appID}`
 
-  fetch(url)
+  // El spinner aparecera cuando presiones el boton y luego carga la informacion
+  
+  Spinner() // Muestra un spinner de carga
+  
+  setTimeout(() => {
+    fetch(url)
     .then( respuesta => respuesta.json())
     .then( datos => {
-      console.log(datos)
-      if( datos.cod === '404') {
-        mostrarError('Ciudad no encontrada')
-      }
+        limpiarHTML() // Limpiar el HTML previo
+        if( datos.cod === '404') {
+          mostrarError('Ciudad no encontrada')
+          return
+        }
+
+        // Imprime la respuesta en el HTML
+        mostrarClima(datos)
     })
+  }, 1000);
+}
+  
+
+function mostrarClima(datos){
+  // Destructuring a un objeto
+  const { name, main: { temp, temp_max, temp_min} } = datos
+
+  const centigrados = Math.round(temp - 273.15);
+  const max = Math.round(temp_max - 273.15);
+  const min = Math.round(temp_min - 273.15);
+ 
+  const nombreCiudad = document.createElement("p");
+  nombreCiudad.textContent = `Clima en ${name}`;
+  nombreCiudad.classList.add("text-2xl", "font-bold", "mb-2");
+ 
+  const actual = document.createElement("p");
+  actual.textContent = `${centigrados} °C`;
+  actual.classList.add("font-bold", "text-6xl");
+ 
+  const tempMaxima = document.createElement("p");
+  tempMaxima.textContent = `Max: ${max} °C`;
+  tempMaxima.classList.add("text-xl");
+ 
+  const tempMinima = document.createElement("p");
+  tempMinima.textContent = `Min: ${min} °C`;
+  tempMinima.classList.add("text-xl");
+ 
+  const resultadoDiv = document.createElement("div");
+  resultadoDiv.classList.add("text-center", "text-white");
+  resultadoDiv.appendChild(nombreCiudad);
+  resultadoDiv.appendChild(actual);
+  resultadoDiv.appendChild(tempMaxima);
+  resultadoDiv.appendChild(tempMinima);
+ 
+  resultado.appendChild(resultadoDiv);
+}
+
+function limpiarHTML(){
+  while(resultado.firstChild){
+    resultado.removeChild(resultado.firstChild)
+  }
+}
+
+function Spinner(){
+  
+  limpiarHTML()
+
+  const divSpiner = document.createElement('div')
+  divSpiner.classList.add('sk-fading-circle')
+
+  divSpiner.innerHTML = `
+  <div class="sk-fading-circle">
+  <div class="sk-circle1 sk-circle"></div>
+  <div class="sk-circle2 sk-circle"></div>
+  <div class="sk-circle3 sk-circle"></div>
+  <div class="sk-circle4 sk-circle"></div>
+  <div class="sk-circle5 sk-circle"></div>
+  <div class="sk-circle6 sk-circle"></div>
+  <div class="sk-circle7 sk-circle"></div>
+  <div class="sk-circle8 sk-circle"></div>
+  <div class="sk-circle9 sk-circle"></div>
+  <div class="sk-circle10 sk-circle"></div>
+  <div class="sk-circle11 sk-circle"></div>
+  <div class="sk-circle12 sk-circle"></div>
+  </div>
+  `
+
+  resultado.appendChild(divSpiner)
 }
