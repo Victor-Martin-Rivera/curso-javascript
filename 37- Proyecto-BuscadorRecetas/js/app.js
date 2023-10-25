@@ -2,6 +2,7 @@ function iniciarApp(){
 
     const selectCategorias = document.querySelector('#categorias')
     const resultado = document.querySelector('#resultado')
+    const modal = new bootstrap.Modal('#modal', {})
 
     selectCategorias.addEventListener('change', seleccionarCategoria)
 
@@ -70,8 +71,12 @@ function iniciarApp(){
             const recetaButton = document.createElement('button')
             recetaButton.classList.add('btn', 'btn-danger', 'w-100')
             recetaButton.textContent = 'Ver Receta'
-            recetaButton.dataset.bsTarget = '#modal'
-            recetaButton.dataset.bsToggle = 'modal'
+            // recetaButton.dataset.bsTarget = '#modal'
+            // recetaButton.dataset.bsToggle = 'modal'
+            recetaButton.onclick = function(){
+                seleccionarReceta(idMeal)
+            }
+
 
             // Inyectar en el codigo HTML
             recetaCardBody.appendChild(recetaHeading)
@@ -83,6 +88,32 @@ function iniciarApp(){
             recetaContenedor.appendChild(recetaCard)
             resultado.appendChild(recetaContenedor)
         })
+    }
+
+    function seleccionarReceta(id){
+        const url = `https://www.themealdb.com/api/json/v1/1/lookup.php?i=${id}`
+        fetch(url)
+            .then(respuesta => respuesta.json())
+            .then(resultado => mostrarRecetaModal(resultado.meals[0]))
+    }
+
+    function mostrarRecetaModal(receta){
+        
+        const { idMeal, strInstructions, strMeal, strMealThumb} = receta
+        
+        // Añadir contenido al modal
+        const modalTitle = document.querySelector('.modal .modal-title')
+        const modalBody = document.querySelector('.modal .modal-body')
+
+        modalTitle.textContent = strMeal
+        modalBody.innerHTML = `
+            <img class=img-fluid" src="${strMealThumb}" alt="Receta ${strMeal}"/>
+            <h3 class="my-3">Instrucciones</h3>
+            <p>${strInstructions}</p>
+        `
+
+        // Muestra el modal
+        modal.show()
     }
 
     function limpiarHTML(selector){
